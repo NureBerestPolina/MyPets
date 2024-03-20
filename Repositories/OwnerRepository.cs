@@ -13,63 +13,49 @@ namespace MyPets.Repositories
         private readonly IMongoCollection<Owner> collection;
         public OwnerRepository(IConfiguration configuration)
         {
-            var connString =
-           configuration.GetConnectionString("MongoDBConnection");
+            var connString = configuration.GetConnectionString("MongoDBConnection");
             collection = new MongoClient(connString)
-            .GetDatabase("pets_db")
-            .GetCollection<Owner>("owners");
+                .GetDatabase("pets_db")
+                .GetCollection<Owner>("owners");
         }
-        public User Insert(User user)
+        public Owner Insert(Owner owner)
         {
-            var existingUser = GetByUsername(user.UserName);
-            if (existingUser != null)
-                throw new Exception("User with same username
-               already exists");
+            var existingOwner = GetByOwnerName(owner.OwnerName);
+            if (existingOwner != null)
+                throw new Exception("Pet owner with same name already exists");
                
-                user.Id = Guid.NewGuid();
-            collection.InsertOne(user);
-            return user;
+            owner.Id = Guid.NewGuid();
+            collection.InsertOne(owner);
+            return owner;
         }
-        public IReadOnlyCollection<User> GetAll()
+
+        public IReadOnlyCollection<Owner> GetAll()
         {
-            return collection
-            .Find(x => true)
-           .ToList();
+            return collection.Find(x => true).ToList();
         }
-        public User GetById(Guid id)
+
+        public Owner GetById(Guid id)
         {
-            return collection
-            .Find(x => x.Id == id)
-            .FirstOrDefault();
+            return collection.Find(x => x.Id == id).FirstOrDefault();
         }
-        public User GetByUsername(string username)
+
+        public Owner GetByOwnerName(string ownerName)
         {
-            return collection
-            .Find(x => x.UserName == username)
-           .FirstOrDefault();
+            return collection.Find(x => x.OwnerName == ownerName).FirstOrDefault();
         }
-        public User GetByUsernameAndPassword(string username,
-       string password)
+
+        public Owner GetByNameAndPassword(string ownerName, string password)
         {
-            return collection
-            .Find(x => x.UserName == username &&
-            x.Password == password)
-            .FirstOrDefault();
+            return collection.Find(x => x.OwnerName == ownerName && x.Password == password).FirstOrDefault();
         }
+
         public async void CreateIndexes()
         {
             await collection.Indexes
-            .CreateOneAsync(new
-           CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(_ =>
-           _.Id)))
-            .ConfigureAwait(false);
+                .CreateOneAsync(new CreateIndexModel<Owner>(Builders<Owner>.IndexKeys.Ascending(_ => _.Id))).ConfigureAwait(false);
+
             await collection.Indexes
-            .CreateOneAsync(new
-           CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(_ =>
-           _.UserName)))
-            .ConfigureAwait(false);
+                .CreateOneAsync(new CreateIndexModel<Owner>(Builders<Owner>.IndexKeys.Ascending(_ => _.OwnerName))).ConfigureAwait(false);
         }
     }
-
-}
 }
