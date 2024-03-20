@@ -18,20 +18,21 @@ namespace MyPets.Repositories
                 .GetDatabase("pets_db")
                 .GetCollection<Owner>("owners");
         }
-        public Owner Insert(Owner owner)
+        public async Task<Owner> Insert(Owner owner)
         {
-            var existingOwner = GetByOwnerName(owner.OwnerName);
+            var existingOwner = await GetByOwnerName(owner.OwnerName);
             if (existingOwner != null)
                 throw new Exception("Pet owner with same name already exists");
                
             owner.Id = Guid.NewGuid();
-            collection.InsertOne(owner);
+            await collection.InsertOneAsync(owner);
             return owner;
         }
 
-        public IReadOnlyCollection<Owner> GetAll()
+        public async Task<IReadOnlyCollection<Owner>> GetAll()
         {
-            return collection.Find(x => true).ToList();
+            var result = await collection.FindAsync(x => true);
+            return result.ToList();
         }
 
         public Owner GetById(Guid id)
@@ -39,9 +40,10 @@ namespace MyPets.Repositories
             return collection.Find(x => x.Id == id).FirstOrDefault();
         }
 
-        public Owner GetByOwnerName(string ownerName)
+        public async Task<Owner> GetByOwnerName(string ownerName)
         {
-            return collection.Find(x => x.OwnerName == ownerName).FirstOrDefault();
+            var result = await collection.FindAsync(x => x.OwnerName == ownerName);
+            return result.FirstOrDefault();
         }
 
         public Owner GetByNameAndPassword(string ownerName, string password)
