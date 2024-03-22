@@ -2,15 +2,18 @@ using Microsoft.AspNetCore.Mvc;
 using MyPets.Dtos;
 using MyPets.Models;
 using MyPets.Repositories;
+using MyPets.Services;
 
 namespace MyPets.Controllers;
 
 public class OwnerController : BaseApiController
 {
     private readonly OwnerRepository _ownerRepository;
-    public OwnerController(OwnerRepository ownerRepository)
+    private readonly CurrentUserService _currentUserService;
+    public OwnerController(OwnerRepository ownerRepository, CurrentUserService currentUserService)
     {
         _ownerRepository = ownerRepository;
+        _currentUserService = currentUserService;
     }
     
     [HttpPost]
@@ -52,6 +55,19 @@ public class OwnerController : BaseApiController
         return Ok(users);
     }
 
-    
+
+    [HttpPost]
+    public async Task<IActionResult> Login(LoginDto model)
+    {
+        var result = await _ownerRepository.Login(model);
+        return Ok(result);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> JIJA()
+    {
+        var a = _currentUserService.Email();
+        return Ok(a);
+    }
     
 }

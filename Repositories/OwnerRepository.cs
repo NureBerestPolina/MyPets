@@ -4,6 +4,8 @@ using MyPets.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Infrastructure.Auth;
+using MyPets.Dtos;
 
 
 namespace MyPets.Repositories
@@ -11,8 +13,10 @@ namespace MyPets.Repositories
     public class OwnerRepository
     {
         private readonly IMongoCollection<Owner> collection;
-        public OwnerRepository(IConfiguration configuration)
+        private readonly JwtProvider _jwtProvider;
+        public OwnerRepository(IConfiguration configuration, JwtProvider jwtProvider)
         {
+            _jwtProvider = jwtProvider;
             var connString = configuration.GetConnectionString("MongoDBConnection");
             collection = new MongoClient(connString)
                 .GetDatabase("pets_db")
@@ -46,9 +50,9 @@ namespace MyPets.Repositories
             return result.FirstOrDefault();
         }
 
-        public Owner GetByNameAndPassword(string ownerName, string password)
+        private async Task<Owner> GetByNameAndPassword(string ownerName, string password)
         {
-            return collection.Find(x => x.OwnerName == ownerName && x.Password == password).FirstOrDefault();
+            return (await collection.FindAsync(x => x.OwnerName == ownerName && x.Password == password)).FirstOrDefault();
         }
 
         public async void CreateIndexes()
@@ -58,6 +62,16 @@ namespace MyPets.Repositories
 
             await collection.Indexes
                 .CreateOneAsync(new CreateIndexModel<Owner>(Builders<Owner>.IndexKeys.Ascending(_ => _.OwnerName))).ConfigureAwait(false);
+        }
+
+        public async Task<LoginResponse> Login(LoginDto model)
+        {
+            var user = await GetByNameAndPassword(model.OwnerName, model.Password);
+            var token = _jwtProvider.Generate(user);
+            return new LoginResponse
+            {
+                Token = token
+            };
         }
     }
 }
