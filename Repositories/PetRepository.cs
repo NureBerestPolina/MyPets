@@ -4,6 +4,8 @@ using MyPets.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MongoDB.Bson;
+using MyPets.Dtos;
 
 namespace MyPets.Repositories
 {
@@ -16,26 +18,37 @@ namespace MyPets.Repositories
             collection = new MongoClient(connString).GetDatabase("pets_db").GetCollection<Pet>("pets");
         }
 
-        public Pet Insert(Pet pet)
+        public async Task<Pet> Insert(Pet pet)
         {
             pet.Id = Guid.NewGuid();
-            collection.InsertOne(pet);
+            await collection.InsertOneAsync(pet);
             return pet;
         }
 
-        public Pet GetById(Guid id)
+        public async Task<Pet> GetById(Guid id)
         {
-            return collection.Find(x => x.Id == id).FirstOrDefault();
+            return (await collection.FindAsync(x => x.Id == id)).FirstOrDefault();
         }
 
-        public IReadOnlyCollection<Pet> GetByOwnerId(Guid ownerId)
+        public async Task<List<Pet>> GetByOwnerId(Guid ownerId)
         {
-            return collection.Find(x => x.OwnerId == ownerId).ToList();
+            return (await collection.FindAsync(x => x.OwnerId == ownerId)).ToList();
         }
 
-        public void Delete(Guid id)
+        public async Task<Pet> Delete(Guid id)
         {
-            collection.DeleteOne((x) => x.Id == id);
+            var a = await collection.FindOneAndDeleteAsync(x=>x.Id == id);
+            return a;
+        }
+
+        public async Task<Pet> Edit(EditPetDto editPetDto)
+        {
+            var a = await collection.FindOneAndUpdateAsync(x => x.Id == editPetDto.Id,
+                Builders<Pet>.Update
+                    .Set(x => x.Name, editPetDto.Name)
+                    .Set(x => x.Specie, editPetDto.Specie)
+                    .Set(x => x.Breed, editPetDto.Breed));
+            return a;
         }
 
         public async void CreateIndexes()
@@ -45,6 +58,14 @@ namespace MyPets.Repositories
 
             await collection.Indexes
                 .CreateOneAsync(new CreateIndexModel<Pet>(Builders<Pet>.IndexKeys.Ascending(_ => _.OwnerId))).ConfigureAwait(false);
+        }
+
+        public async Task<List<Pet>> Search(Guid userId, string substring)
+        {
+            var regexPattern = new BsonRegularExpression(new System.Text.RegularExpressions.Regex(substring, System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+            var result = await collection.Aggregate().Match(Builders<Pet>.Filter.Regex("Name", regexPattern)).ToListAsync();
+
+            return result;
         }
     }
 }

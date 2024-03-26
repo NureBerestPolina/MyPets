@@ -73,5 +73,12 @@ namespace MyPets.Repositories
                 Token = token
             };
         }
+
+        public async Task<Owner> ChangePassword(Guid userId, string newPassword)
+        {
+            var a = await collection.FindOneAndUpdateAsync(x => x.Id == userId, Builders<Owner>.Update.Set(x=>x.Password, newPassword));
+            return a;
+        }
+        
     }
 }

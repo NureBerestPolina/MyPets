@@ -9,11 +9,13 @@ namespace MyPets.Controllers;
 public class OwnerController : BaseApiController
 {
     private readonly OwnerRepository _ownerRepository;
+    private readonly PetRepository _petRepository;
     private readonly CurrentUserService _currentUserService;
-    public OwnerController(OwnerRepository ownerRepository, CurrentUserService currentUserService)
+    public OwnerController(OwnerRepository ownerRepository, CurrentUserService currentUserService, PetRepository petRepository)
     {
         _ownerRepository = ownerRepository;
         _currentUserService = currentUserService;
+        _petRepository = petRepository;
     }
     
     [HttpPost]
@@ -63,6 +65,23 @@ public class OwnerController : BaseApiController
         return Ok(result);
     }
 
+    [HttpPut]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto changePasswordDto)
+    {
+        if (changePasswordDto.NewPassword != changePasswordDto.NewPasswordConfirm ||
+            changePasswordDto.NewPassword == changePasswordDto.OldPassword) return Ok(false);
+        var a = await _ownerRepository.ChangePassword(new Guid(_currentUserService.Id()), changePasswordDto.NewPassword);
+        return Ok(a);
+
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Search([FromQuery] string substring)
+    {
+        var a = await _petRepository.Search(new Guid(_currentUserService.Id()), substring);
+        return Ok(a);
+    }
+    
     [HttpGet]
     public async Task<IActionResult> JIJA()
     {

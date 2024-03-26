@@ -10,7 +10,11 @@ namespace MyPets.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public string Id() => _httpContextAccessor.HttpContext!.User.FindFirst("id").Value;
+        public string Id()
+        {
+            var s = _httpContextAccessor.HttpContext!.User.Claims.Where(x =>x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").FirstOrDefault().Value;
+            return s;
+        }
 
         public string Email()
         {
