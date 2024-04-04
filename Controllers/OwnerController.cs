@@ -76,7 +76,7 @@ public class OwnerController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<IActionResult> Search([FromQuery] string substring)
+    public async Task<IActionResult> Search(string substring)
     {
         var a = await _petRepository.Search(new Guid(_currentUserService.Id()), substring);
         return Ok(a);

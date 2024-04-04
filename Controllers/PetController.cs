@@ -34,21 +34,21 @@ public class PetController : BaseApiController
     }
     
     [HttpGet]
-    public async Task<IActionResult> GetByUserId([FromRoute] Guid userId)
+    public async Task<IActionResult> GetByUserId(Guid userId)
     {
         var result = await _petRepository.GetByOwnerId(userId);
         return Ok(result);
     }
     
     [HttpGet]
-    public async Task<IActionResult> Get([FromRoute] Guid id)
+    public async Task<IActionResult> Get(Guid id)
     {
         var result = await _petRepository.GetById(id);
         return Ok(result);
     }
 
     [HttpDelete]
-    public async Task<IActionResult> Delete([FromRoute] Guid id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _petRepository.Delete(id);
         return Ok(result);
