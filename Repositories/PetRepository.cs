@@ -60,7 +60,7 @@ namespace MyPets.Repositories
                 .CreateOneAsync(new CreateIndexModel<Pet>(Builders<Pet>.IndexKeys.Ascending(_ => _.OwnerId))).ConfigureAwait(false);
         }
 
-        public async Task<List<Pet>> Search(Guid userId, string substring)
+        public async Task<List<Pet>> Search(string substring)
         {
             var regexPattern = new BsonRegularExpression(new System.Text.RegularExpressions.Regex(substring, System.Text.RegularExpressions.RegexOptions.IgnoreCase));
             var result = await collection.Aggregate().Match(Builders<Pet>.Filter.Regex("Name", regexPattern)).ToListAsync();
