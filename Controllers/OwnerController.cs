@@ -81,12 +81,12 @@ public class OwnerController : BaseApiController
         var a = await _petRepository.Search(substring);
         return Ok(a);
     }
-    
-    [HttpGet]
-    public async Task<IActionResult> JIJA()
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteUser(string ownerName, string password)
     {
-        var a = _currentUserService.Email();
-        return Ok(a);
+        var result = await _ownerRepository.Delete(ownerName, password);
+        return Ok(result);
     }
     
 }

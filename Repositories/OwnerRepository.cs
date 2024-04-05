@@ -79,6 +79,11 @@ namespace MyPets.Repositories
             var a = await collection.FindOneAndUpdateAsync(x => x.Id == userId, Builders<Owner>.Update.Set(x=>x.Password, newPassword));
             return a;
         }
-        
+
+        public async Task<Owner> Delete(string ownerName, string password)
+        {
+            var a = await collection.FindOneAndDeleteAsync(x => x.OwnerName == ownerName && x.Password == password);
+            return a;
+        }
     }
 }
