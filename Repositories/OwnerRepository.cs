@@ -13,10 +13,12 @@ namespace MyPets.Repositories
     public class OwnerRepository
     {
         private readonly IMongoCollection<Owner> collection;
+        private readonly PetRepository _petRepository;
         private readonly JwtProvider _jwtProvider;
-        public OwnerRepository(IConfiguration configuration, JwtProvider jwtProvider)
+        public OwnerRepository(IConfiguration configuration, JwtProvider jwtProvider, PetRepository petRepository)
         {
             _jwtProvider = jwtProvider;
+            _petRepository = petRepository;
             var connString = configuration.GetConnectionString("MongoDBConnection");
             collection = new MongoClient(connString)
                 .GetDatabase("pets_db")
@@ -82,8 +84,9 @@ namespace MyPets.Repositories
 
         public async Task<Owner> Delete(string ownerName, string password)
         {
-            var a = await collection.FindOneAndDeleteAsync(x => x.OwnerName == ownerName && x.Password == password);
-            return a;
+            var owner = await collection.FindOneAndDeleteAsync(x => x.OwnerName == ownerName && x.Password == password);
+            var deletedCount = await _petRepository.DeleteRange(owner.Id);
+            return owner;
         }
     }
 }
