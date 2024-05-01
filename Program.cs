@@ -7,7 +7,7 @@ using MyPets.Repositories;
 using MyPets.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-
+const string corsPolicy = "corsPolicy";
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -47,6 +47,16 @@ builder.Services.AddAuthentication(options =>
         options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     })
     .AddJwtBearer();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(corsPolicy, corsBuilder => {
+        corsBuilder
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials()
+            .WithOrigins("http://localhost:3000");
+    });
+});
 builder.Services.AddHttpContextAccessor();
 builder.Services.ConfigureOptions<JwtOptionsSetup>();
 builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
@@ -68,6 +78,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors(corsPolicy);
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
