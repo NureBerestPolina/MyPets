@@ -8,5 +8,8 @@ namespace MyPets.Dtos
         public string Country { get; set; }
         public string Gender { get; set; }
         public string Password { get; set; }
+        
+        public double Latitude { get; set; }
+        public double Longtitude { get; set; }
     }
 }

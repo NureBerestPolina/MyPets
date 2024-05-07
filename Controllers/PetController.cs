@@ -36,9 +36,16 @@ public class PetController : BaseApiController
     [HttpGet]
     public async Task<IActionResult> GetByUserId()
     {
-        var userId = new Guid(_currentUserService.Id());
-        var result = await _petRepository.GetByOwnerId(userId);
-        return Ok(result);
+        try
+        {
+            var userId = new Guid(_currentUserService.Id());
+            var result = await _petRepository.GetByOwnerId(userId);
+            return Ok(result);
+        }
+        catch (NullReferenceException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
     
     [HttpGet]

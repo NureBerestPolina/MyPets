@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace MyPets.Models
 {
@@ -22,5 +23,7 @@ namespace MyPets.Models
 
         [BsonElement("password")]
         public string Password { get; set; }
+        
+        public GeoJsonPoint<GeoJson2DCoordinates> Location { get; set; }
     }
 }

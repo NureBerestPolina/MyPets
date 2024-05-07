@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace MyPets.Models
 {
@@ -25,5 +26,6 @@ namespace MyPets.Models
 
         [BsonElement("updatedAt")]
         public DateTime? UpdatedAt { get; set; }
+        
     }
 }

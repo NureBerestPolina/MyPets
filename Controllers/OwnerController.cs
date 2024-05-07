@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Driver.GeoJsonObjectModel;
 using MyPets.Dtos;
 using MyPets.Models;
 using MyPets.Repositories;
@@ -31,7 +32,8 @@ public class OwnerController : BaseApiController
             Country = model.Country,
             Gender = model.Gender,
             Id = Guid.NewGuid(),
-            RegistrationDate = DateTime.UtcNow
+            RegistrationDate = DateTime.UtcNow,
+            Location = GeoJson.Point(GeoJson.Position(model.Latitude,model.Longtitude))
         });
         return Ok(new OwnerResponseDto() {
             Id = dbUser.Id,
@@ -56,22 +58,51 @@ public class OwnerController : BaseApiController
             });
         return Ok(users);
     }
+    [HttpGet]
+    public async Task<IActionResult> GetUser()
+    {
+        try
+        {
+           var id = new Guid(_currentUserService.Id()) ;
+                   var user = (await _ownerRepository.GetById(id));
+                   return Ok(user); 
+        }
+        catch (NullReferenceException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        
+    }
 
 
     [HttpPost]
     public async Task<IActionResult> Login(LoginDto model)
     {
-        var result = await _ownerRepository.Login(model);
-        return Ok(result);
+        try
+        {
+            var result = await _ownerRepository.Login(model);
+                    return Ok(result);
+        }catch (NullReferenceException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        
     }
 
     [HttpPut]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto changePasswordDto)
     {
-        if (changePasswordDto.NewPassword != changePasswordDto.NewPasswordConfirm ||
-            changePasswordDto.NewPassword == changePasswordDto.OldPassword) return Ok(false);
-        var a = await _ownerRepository.ChangePassword(new Guid(_currentUserService.Id()), changePasswordDto.NewPassword);
-        return Ok(a);
+        try
+        {
+           if (changePasswordDto.NewPassword != changePasswordDto.NewPasswordConfirm ||
+                       changePasswordDto.NewPassword == changePasswordDto.OldPassword) return Ok(false);
+                   var a = await _ownerRepository.ChangePassword(new Guid(_currentUserService.Id()), changePasswordDto.NewPassword);
+                   return Ok(a); 
+        }catch (NullReferenceException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        
 
     }
 
@@ -88,5 +119,12 @@ public class OwnerController : BaseApiController
         var result = await _ownerRepository.Delete(ownerName, password);
         return Ok(result);
     }
-    
+
+    [HttpGet]
+    public async Task<IActionResult> GeoGet(string specie, double radius)
+    {
+        var (latitude, longtitude) = await _ownerRepository.GetLoc(new Guid(_currentUserService.Id()));
+        var a = await _ownerRepository.GetNearestOwnersOfSpecie(latitude, longtitude, specie, radius/111);
+        return Ok(a);
+    }
 }

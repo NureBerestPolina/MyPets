@@ -5,6 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Infrastructure.Auth;
+using MongoDB.Driver.GeoJsonObjectModel;
+using MongoDB.Driver.Linq;
+using MongoDB.Driver.Search;
 using MyPets.Dtos;
 
 
@@ -13,6 +16,7 @@ namespace MyPets.Repositories
     public class OwnerRepository
     {
         private readonly IMongoCollection<Owner> collection;
+        private readonly IMongoCollection<Pet> petCollection;
         private readonly PetRepository _petRepository;
         private readonly JwtProvider _jwtProvider;
         public OwnerRepository(IConfiguration configuration, JwtProvider jwtProvider, PetRepository petRepository)
@@ -23,6 +27,9 @@ namespace MyPets.Repositories
             collection = new MongoClient(connString)
                 .GetDatabase("pets_db")
                 .GetCollection<Owner>("owners");
+            petCollection = new MongoClient(connString)
+                .GetDatabase("pets_db")
+                .GetCollection<Pet>("pets");
         }
         public async Task<Owner> Insert(Owner owner)
         {
@@ -41,9 +48,9 @@ namespace MyPets.Repositories
             return result.ToList();
         }
 
-        public Owner GetById(Guid id)
+        public async Task<Owner> GetById(Guid id)
         {
-            return collection.Find(x => x.Id == id).FirstOrDefault();
+            return await collection.Find(x => x.Id == id).FirstOrDefaultAsync();
         }
 
         public async Task<Owner> GetByOwnerName(string ownerName)
@@ -87,6 +94,27 @@ namespace MyPets.Repositories
             var owner = await collection.FindOneAndDeleteAsync(x => x.OwnerName == ownerName && x.Password == password);
             var deletedCount = await _petRepository.DeleteRange(owner.Id);
             return owner;
+        }
+
+        public async Task<List<Owner>> GetNearestOwnersOfSpecie(double latitude, double longtitude, string specie,
+            double radius)
+        {
+            var filter = Builders<Owner>.Filter.GeoWithinCenter(x => x.Location, latitude,longtitude, radius);
+
+            var a = await collection.Aggregate().Match(filter).ToListAsync();
+            var b = (await petCollection.Aggregate().ToListAsync())
+                .Where(x => x.Specie == specie)
+                .DistinctBy(x=>x.OwnerId)
+                .Select(x => x.OwnerId)
+                .ToList();
+            var af = a.Where(x => b.Contains(x.Id)).ToList();
+            return af;
+        }
+
+        public async Task<(double, double)> GetLoc(Guid id)
+        {
+            var a = (await collection.FindAsync(x => x.Id == id)).FirstOrDefault();
+            return (a.Location.Coordinates.X, a.Location.Coordinates.Y);
         }
     }
 }
